@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Thesis Garden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&display=swap">
+<style>
+/* Layout: a sketchbook page. Ink line drawings on paper: garden of circled plants → constellation → blog post sheet. */
+:root {
+  --paper: #FBFAF6;
+  --ink: #1E1D1B;
+  --pencil: #8E8A82;
+  --rule: #E2DED5;
+  --leaf: #2F6B3A;
+  --wilt: #9A6A2C;
+  --f-hand: "Kalam", "Bradley Hand", "Segoe Print", cursive;
+  --f-read: "Literata", "Iowan Old Style", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17171A; --ink: #ECE9E2; --pencil: #8F8C86; --rule: #2C2C30; --leaf: #8CC694; --wilt: #D8A85E;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #17171A; --ink: #ECE9E2; --pencil: #8F8C86; --rule: #2C2C30; --leaf: #8CC694; --wilt: #D8A85E;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; }
+html, body { background: var(--paper); color: var(--ink); }
+body { font-family: var(--f-hand); font-size: 18px; line-height: 1.4; }
+.page { max-width: 980px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 60px; }
+h1 { font-weight: 700; font-size: clamp(34px, 6vw, 52px); margin: 0; line-height: 1; text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 8px; }
+h2 { font-weight: 700; font-size: 30px; margin: 0; line-height: 1.1; }
+button, input, textarea, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px dashed var(--ink); outline-offset: 3px; }
+svg { overflow: visible; }
+.ink { stroke: var(--ink); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* sketchy controls: a box drawn in pen, like the "+ Seed" box in the notebook */
+.box { background: transparent; border: 2px solid var(--ink); border-radius: 3px 6px 4px 7px / 6px 3px 7px 4px; padding: 6px 16px; cursor: pointer; box-shadow: 2px 2px 0 var(--ink); }
+.box:hover { transform: translate(-1px, -1px); box-shadow: 3px 3px 0 var(--ink); }
+.box:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+.box:disabled { opacity: .45; cursor: default; }
+.plus { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 2px solid var(--ink); border-radius: 50%; margin-right: 8px; font-weight: 700; line-height: 1; }
+.line-in { background: transparent; border: 0; border-bottom: 2px solid var(--ink); padding: 4px 2px; outline: none; min-width: 0; }
+.line-in:focus { border-bottom-style: dashed; }
+.link { background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 4px; color: var(--ink); }
+.small { font-size: 15px; color: var(--pencil); }
+.err { color: var(--wilt); font-size: 15px; }
+
+/* enter */
+.enter { min-height: 70vh; display: grid; place-content: center; justify-items: center; gap: 22px; text-align: center; }
+.enter form { display: flex; gap: 14px; align-items: end; flex-wrap: wrap; justify-content: center; }
+.enter .line-in { font-size: 24px; width: min(280px, 80vw); text-align: center; }
+
+/* garden */
+.top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+.bench { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px 10px; }
+.plant { background: none; border: 0; padding: 0; cursor: pointer; display: grid; justify-items: center; gap: 2px; }
+.plant svg { width: 100%; max-width: 200px; height: auto; }
+.plant .nm { font-size: 21px; font-weight: 700; }
+.plant .st { font-size: 15px; color: var(--pencil); }
+.plant .st.wilting, .plant .st.dead { color: var(--wilt); }
+.plant:hover .ring { stroke-dasharray: 5 6; }
+.mine .nm { text-decoration: underline; text-underline-offset: 4px; }
+.seed-bar { margin-top: 34px; display: flex; gap: 14px; align-items: end; flex-wrap: wrap; justify-content: center; }
+.seed-bar .line-in { width: min(320px, 80vw); }
+
+/* constellation */
+.back { margin-bottom: 14px; display: inline-block; }
+.sky svg { display: block; width: 100%; height: auto; }
+.star { cursor: pointer; }
+.star:hover .seedmark, .star:focus .seedmark { stroke-width: 3; }
+.star text { font-family: var(--f-hand); fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 6px; stroke-linejoin: round; }
+.under { display: flex; justify-content: center; margin-top: 8px; }
+.notes { margin: 34px auto 0; max-width: 560px; display: grid; gap: 10px; }
+.note { border-top: 1.5px dashed var(--rule); padding-top: 8px; font-size: 17px; }
+.note b { font-weight: 700; margin-right: 6px; }
+.notes form { display: flex; gap: 12px; align-items: end; }
+.notes .line-in { flex: 1; }
+
+/* blog post sheet */
+.sheet { position: relative; max-width: 680px; margin: 10px auto 0; border: 2px solid var(--ink); border-radius: 4px 8px 5px 9px / 9px 4px 8px 5px; padding: 26px clamp(18px, 4vw, 40px) 30px; box-shadow: 6px 6px 0 -2px var(--paper), 6px 6px 0 0 var(--ink); background: var(--paper); }
+.sheet .tag { display: inline-block; border: 2px solid var(--ink); padding: 0 10px; font-weight: 700; letter-spacing: .06em; font-size: 15px; text-transform: uppercase; }
+.sheet h2 { margin: 14px 0 4px; }
+.sheet .meta { font-size: 15px; color: var(--pencil); display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+.sheet select { background: transparent; border: 0; border-bottom: 1.5px solid var(--pencil); font-size: 15px; color: var(--pencil); }
+.body, .sheet textarea { font-family: var(--f-read); font-size: 17px; line-height: 32px; margin-top: 18px; }
+.body p { margin: 0 0 32px; overflow-wrap: anywhere; }
+.sheet textarea { display: block; width: 100%; min-height: 352px; resize: vertical; border: 0; outline: none; padding: 0; background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 32px); background-attachment: local; }
+.sheet .acts { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-top: 18px; }
+.empty-lines { height: 160px; margin-top: 18px; background: repeating-linear-gradient(to bottom, transparent 0 31px, var(--rule) 31px 32px); display: grid; place-items: center; color: var(--pencil); }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); border: 2px solid var(--ink); background: var(--paper); padding: 4px 14px; font-size: 16px; z-index: 10; }
+@keyframes sway { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+.sway { transform-box: fill-box; transform-origin: 50% 100%; animation: sway 5s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .sway { animation: none; } .box:hover, .box:active { transform: none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4"/>
+    <feDisplacementMap in="SourceGraphic" scale="2.6"/>
+  </filter>
+</svg>
+<main class="page" id="app"></main>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+  const DAY = 86400000;
+  const DEAD_AFTER = 21;
+  const KINDS = { blog: "Blog post", reflection: "Reflection", review: "Reading review" };
+  const S = { db: null, user: null, me: null, ready: false, entered: false, view: "enter", plantId: null, nodeId: null, plants: [], nodes: [], checkins: [], unsub: {}, plantsLoaded: false, nodesLoaded: false };
+  const $ = (s) => document.querySelector(s);
+  const app = $("#app");
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  function health(p) {
+    const d = Math.max(0, Math.floor((Date.now() - (p.lastActivity || p.createdAt || Date.now())) / DAY));
+    const v = Math.max(0, 1 - d / DEAD_AFTER);
+    const key = d >= DEAD_AFTER ? "dead" : d > 7 ? "wilting" : d > 3 ? "ok" : "thriving";
+    return { key, v, label: { dead: "dead", wilting: "wilting", ok: "ok", thriving: "thriving" }[key] };
+  }
+  function hash(str) { let h = 2166136261; for (const c of String(str)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return ((h >>> 0) % 1000) / 1000; }
+  function toast(m) { const t = $("#toast"); t.textContent = m; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (t.hidden = true), 2200); }
+  function friendly(e) {
+    if (e && e.code === "invalid_argument") return "Not allowed.";
+    if (e && e.code === "quota_exceeded") return "The garden is full.";
+    return "Didn't save. Try again.";
+  }
+  const words = (t) => (String(t).trim().match(/\S+/g) || []).length;
+  const myPlant = () => S.plants.find((p) => p.id === S.me);
+
+  // ---------- drawings ----------
+  // Plant in a circle (as in the notebook): seed bulb, roots = the library, leaves = sprouts, inked leaves = done.
+  function plantSVG(p, { circle = true, sway = true } = {}) {
+    const h = health(p), v = h.v;
+    const sprouts = Math.min(p.sproutCount || 0, 9), done = Math.min(p.doneCount || 0, 9);
+    const roots = Math.min((p.seedCount || 0) + (p.sproutCount || 0) + (p.doneCount || 0), 7);
+    const cx = 92, base = 128;
+    const leafN = sprouts + done;
+    const stemH = 30 + Math.min(leafN, 12) * 7;
+    const droop = (1 - v) * 58;
+    const tipX = cx + droop, tipY = base - 10 - stemH * (0.45 + 0.55 * v);
+    const cX = cx - 4 + droop * 0.15, cY = base - 10 - stemH * 0.85;
+    const pt = (t) => [(1 - t) ** 2 * cx + 2 * (1 - t) * t * cX + t * t * tipX, (1 - t) ** 2 * (base - 9) + 2 * (1 - t) * t * cY + t * t * tipY];
+    const tint = h.key === "wilting" || h.key === "dead" ? "var(--wilt)" : "var(--ink)";
+    let leaves = "";
+    const n = Math.max(leafN, 2);
+    for (let i = 0; i < n; i++) {
+      const t = 0.18 + (0.8 * (i + 0.5)) / n;
+      const [x, y] = pt(t);
+      const side = i % 2 ? 1 : -1;
+      const len = leafN ? 15 + (1 - t) * 8 : 9;
+      const a = -38 + (1 - v) * 100;
+      const rot = side > 0 ? a : 180 - a;
+      const filled = i < done;
+      leaves += `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot.toFixed(1)})"><path d="M0 0 C${len * .3} ${-len * .45} ${len * .8} ${-len * .35} ${len} 0 C${len * .8} ${len * .35} ${len * .3} ${len * .45} 0 0Z M2 0 H${len * .8}" class="ink" style="stroke-width:1.8;stroke:${tint};${filled ? "fill:" + tint : ""}"/></g>`;
+    }
+    let rootsD = "";
+    for (let i = 0; i < Math.max(roots, 1); i++) {
+      const s = (i / Math.max(roots - 1, 1)) * 2 - 1; // -1..1
+      const ex = cx + s * 34 + (hash(p.id + i) - 0.5) * 8, ey = base + 14 + (1 - Math.abs(s)) * 10 + hash(i + p.id) * 6;
+      rootsD += `<path d="M${cx + s * 4} ${base + 7} Q${cx + s * 14} ${base + 18} ${ex.toFixed(1)} ${ey.toFixed(1)}" class="ink" style="stroke-width:1.4;stroke:var(--pencil)"/>`;
+    }
+    const ring = circle ? `<path class="ink ring" d="M150 54 C 170 92, 158 150, 104 162 C 50 172, 18 132, 22 92 C 26 48, 70 22, 116 30 C 132 33, 142 40, 148 48" style="stroke-width:1.8"/>` : "";
+    return `<svg viewBox="0 0 184 184" role="img" aria-label="${h.label} plant">
+      <g filter="url(#rough)">
+        ${ring}
+        ${rootsD}
+        <g class="${sway && h.key === "thriving" ? "sway" : ""}">
+          <path d="M${cx} ${base - 9} Q${cX.toFixed(1)} ${cY.toFixed(1)} ${tipX.toFixed(1)} ${tipY.toFixed(1)}" class="ink" style="stroke:${tint}"/>
+          ${leaves}
+        </g>
+        <circle cx="${cx}" cy="${base}" r="9" class="ink"/>
+        <path d="M${cx - 30} ${base + 5} q15 -3 30 -1 t34 1" class="ink" style="stroke-width:1.4;stroke:var(--pencil)"/>
+      </g>
+    </svg>`;
+  }
+
+  // Constellation: seeds around a loose loop, joined in the order they were planted.
+  function skySVG(nodes) {
+    const W = 760, H = 430, cx = W / 2, cy = H / 2;
+    const n = nodes.length;
+    const pos = nodes.map((nd, i) => {
+      const a = -Math.PI / 2 + (i / Math.max(n, 1)) * Math.PI * 2 + (hash(nd.id) - 0.5) * 0.35;
+      const k = 0.78 + hash(nd.id + "r") * 0.32;
+      return { nd, ca: Math.cos(a), x: cx + Math.cos(a) * 230 * k, y: cy + Math.sin(a) * 150 * k };
+    });
+    let lines = "";
+    if (n > 1) {
+      const pts = pos.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`);
+      lines = `<path d="M${pts.join(" L")}${n > 2 ? " Z" : ""}" class="ink" style="stroke-width:1.5"/>`;
+    }
+    const stars = pos.map((p) => {
+      const st = p.nd.status || "seed";
+      const rot = (hash(p.nd.id + "a") - 0.5) * 70;
+      const seed = `<ellipse class="ink seedmark" rx="11" ry="6.5" transform="rotate(${rot.toFixed(0)})" style="fill:${st === "done" ? "var(--ink)" : "var(--paper)"}"/>`;
+      const sprout = st !== "seed" ? `<path class="ink" d="M0 -5 V-18 M0 -15 c-3 -6 -9 -6 -11 -5 2 5 7 6 11 5 M0 -17 c3 -6 9 -6 11 -5 -2 5 -7 6 -11 5" style="stroke-width:1.6;stroke:var(--leaf)"/>` : "";
+      const label = p.nd.title.length > 22 ? p.nd.title.slice(0, 21) + "…" : p.nd.title;
+      const below = p.y > cy;
+      return `<g class="star" tabindex="0" role="button" data-node="${esc(p.nd.id)}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})" aria-label="${esc(p.nd.title)}, ${st}">
+        <circle r="24" fill="transparent"/>${sprout}${seed}
+        ${Math.abs(p.ca) > 0.55
+          ? `<text x="${p.ca > 0 ? 18 : -18}" y="6" text-anchor="${p.ca > 0 ? "start" : "end"}" font-size="18">${esc(label)}</text>`
+          : `<text y="${below ? 30 : -26}" text-anchor="middle" font-size="18">${esc(label)}</text>`}
+      </g>`;
+    }).join("");
+    return `<svg viewBox="0 0 ${W} ${H}" role="group" aria-label="Constellation of ${n} readings"><g filter="url(#rough)">${lines}</g>${stars}</svg>`;
+  }
+
+  // ---------- server client: documents and collections over /api, live via Server-Sent Events ----------
+  const SESSION_KEY = "thesis-garden-session";
+  const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(10)), (b) => b.toString(16).padStart(2, "0")).join("");
+  function makeDb(token, onAuthFail) {
+    const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token };
+    async function call(url, opts = {}) {
+      let r;
+      try { r = await fetch(url, { ...opts, headers }); } catch { throw { code: "unavailable" }; }
+      if (r.status === 401) { onAuthFail(); throw { code: "unauthenticated" }; }
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw { code: body.code || (r.status >= 500 ? "unavailable" : "invalid_argument"), message: body.error || "" };
+      return body;
+    }
+    const listeners = new Set();
+    const notify = (path) => {
+      const coll = path.split("/").slice(0, -1).join("/");
+      listeners.forEach((l) => { if (l.key === coll || l.key === path) l.run(); });
+    };
+    const es = new EventSource("/api/stream?token=" + encodeURIComponent(token));
+    es.onmessage = (e) => { try { notify(JSON.parse(e.data).path); } catch {} };
+    es.onopen = () => listeners.forEach((l) => l.run());
+    const poll = setInterval(() => listeners.forEach((l) => l.run()), 30000);
+    function subscribe(key, fetcher, next) {
+      let alive = true, seq = 0;
+      const l = { key, run: async () => { const my = ++seq; try { const v = await fetcher(); if (alive && my === seq) next(v); } catch {} } };
+      listeners.add(l); l.run();
+      return () => { alive = false; listeners.delete(l); };
+    }
+    async function write(op, path, data) {
+      await call("/api/write", { method: "POST", body: JSON.stringify({ op, path, data }) });
+      notify(path);
+    }
+    function query(coll, where = [], order = null, lim = null) {
+      const fetcher = async () => {
+        const q = new URLSearchParams({ collection: coll });
+        if (where.length) q.set("where", JSON.stringify(where));
+        if (order) { q.set("orderBy", order[0]); q.set("dir", order[1]); }
+        if (lim) q.set("limit", lim);
+        const docs = (await call("/api/query?" + q)).docs.map((d) => ({ id: d.id, exists: true, data: () => d.data }));
+        return { docs, size: docs.length, empty: !docs.length };
+      };
+      return {
+        path: coll,
+        where: (f, op, v) => query(coll, [...where, [f, op, v]], order, lim),
+        orderBy: (f, dir = "asc") => query(coll, where, [f, dir], lim),
+        limit: (n) => query(coll, where, order, n),
+        get: fetcher,
+        onSnapshot: (next) => subscribe(coll, fetcher, next),
+      };
+    }
+    function collection(coll) {
+      return { ...query(coll), doc: (id) => doc(coll + "/" + (id || newId())), add: async (data) => { const d = doc(coll + "/" + newId()); await d.set(data); return d; } };
+    }
+    function doc(path) {
+      const fetcher = async () => { const r = await call("/api/doc?path=" + encodeURIComponent(path)); return { id: path.split("/").pop(), exists: r.exists, data: () => r.data }; };
+      return {
+        id: path.split("/").pop(), path,
+        get: fetcher,
+        set: (d) => write("set", path, d),
+        update: (d) => write("update", path, d),
+        delete: () => write("delete", path),
+        onSnapshot: (next) => subscribe(path, fetcher, next),
+        collection: (c) => collection(path + "/" + c),
+      };
+    }
+    return { doc, collection, close: () => { es.close(); clearInterval(poll); listeners.clear(); } };
+  }
+
+  // ---------- data ----------
+  const plantRef = (uid) => S.db.doc("gardens/" + uid);
+  const nodesCol = (uid) => plantRef(uid).collection("nodes");
+  function watchPlant(uid) {
+    if (S.unsub.for === uid) return;
+    S.unsub.nodes && S.unsub.nodes(); S.unsub.ci && S.unsub.ci();
+    S.nodes = []; S.checkins = []; S.nodesLoaded = false; S.unsub.for = uid;
+    S.unsub.nodes = nodesCol(uid).orderBy("createdAt", "asc").onSnapshot((s) => { S.nodes = s.docs.map((d) => ({ id: d.id, ...d.data() })); S.nodesLoaded = true; refresh(); }, () => {});
+    S.unsub.ci = S.db.collection("checkins").where("plant", "==", uid).onSnapshot((s) => { S.checkins = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => a.createdAt - b.createdAt); refresh(); }, () => {});
+  }
+  // plant score ignores done nodes while any are still open
+  async function syncPlant(nodes) {
+    const open = nodes.filter((n) => n.status !== "done");
+    const last = (open.length ? open : nodes).reduce((a, n) => Math.max(a, n.lastActivity || 0), 0);
+    const patch = { seedCount: nodes.filter((n) => n.status === "seed").length, sproutCount: nodes.filter((n) => n.status === "sprout").length, doneCount: nodes.filter((n) => n.status === "done").length };
+    if (last) patch.lastActivity = last;
+    await plantRef(S.me).update(patch);
+  }
+  const withNode = (id, u) => S.nodes.map((n) => (n.id === id ? { ...n, ...u } : n));
+
+  // ---------- views ----------
+  function go(view, plantId = null, nodeId = null) {
+    S.view = view; S.plantId = plantId; S.nodeId = nodeId; S.loadedPost = null; S.confirmDel = false;
+    app.onclick = null;
+    if (plantId) watchPlant(plantId);
+    if (view === "garden" && S.me) watchPlant(S.me); // garden's "+ Seed" needs your nodes
+    render(true);
+    window.scrollTo({ top: 0 });
+  }
+  function refresh() { render(false); }
+  function render(full) {
+    if (!S.ready) { app.innerHTML = `<div class="enter"><h1>Thesis Garden</h1></div>`; return; }
+    if (!S.db || !S.me || S.view === "enter") return viewEnter(full);
+    ({ enter: viewEnter, garden: viewGarden, plant: viewPlant, node: viewNode })[S.view](full);
+  }
+
+  function viewEnter(full) {
+    if (!full) return;
+    const sess = Boolean(S.me && S.name);
+    app.innerHTML = `<div class="enter">
+      <h1>Thesis Garden</h1>
+      ${sess
+        ? `<form id="enter-form"><button class="box" type="submit">enter as ${esc(S.name)} →</button></form>
+           <button class="link small" type="button" id="not-me">not ${esc(S.name)}?</button>`
+        : `<form id="enter-form">
+             <label for="enter-name" class="small" style="width:100%">your name</label>
+             <input id="enter-name" class="line-in" maxlength="40" required autocomplete="username">
+             <input id="enter-pin" class="line-in" style="width:130px" type="password" inputmode="numeric" pattern="[0-9]{4,8}" minlength="4" maxlength="8" required placeholder="pin" aria-label="PIN, 4 to 8 digits" autocomplete="current-password">
+             ${S.needsCode ? `<input id="enter-code" class="line-in" style="width:160px" required placeholder="class code" aria-label="Class code">` : ""}
+             <button class="box" type="submit">enter →</button>
+           </form>
+           <p class="small">new here? pick any 4-digit pin</p>`}
+      <p class="err" id="enter-err" hidden></p>
+    </div>`;
+    $("#not-me")?.addEventListener("click", signOut);
+    $("#enter-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const btn = e.target.querySelector("button[type=submit]"); btn.disabled = true;
+      const fail = (m) => { btn.disabled = false; const el = $("#enter-err"); el.textContent = m; el.hidden = false; };
+      try {
+        if (!sess) {
+          let r;
+          try {
+            r = await fetch("/api/enter", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: $("#enter-name").value.trim(), pin: $("#enter-pin").value.trim(), code: $("#enter-code")?.value.trim() || "" }) });
+          } catch { return fail("Can't reach the garden. Check your connection."); }
+          const b = await r.json().catch(() => ({}));
+          if (!r.ok) return fail(b.error || "Couldn't enter. Try again.");
+          S.me = b.uid; S.token = b.token; S.name = b.name;
+          try { localStorage.setItem(SESSION_KEY, JSON.stringify(b)); } catch {}
+          startDb();
+        }
+        await ensurePlant();
+        go("garden");
+      } catch (err) { if (err?.code !== "unauthenticated") fail(friendly(err)); }
+    });
+  }
+  async function ensurePlant() {
+    const snap = await plantRef(S.me).get();
+    const now = Date.now();
+    if (!snap.exists) await plantRef(S.me).set({ owner: S.me, name: S.name, createdAt: now, lastActivity: now, seedCount: 0, sproutCount: 0, doneCount: 0 });
+    else if (snap.data().name !== S.name) await plantRef(S.me).update({ name: S.name });
+  }
+
+  function viewGarden(full) {
+    if (full) {
+      app.innerHTML = `
+        <div class="top"><h1>Thesis Garden</h1></div>
+        <section class="bench" id="bench" aria-label="Plants"></section>
+        <form class="seed-bar" id="seed-form">
+          <input id="seed-title" class="line-in" maxlength="200" placeholder="book or article title" aria-label="Book or article title" required>
+          <button class="box" type="submit"><span class="plus">+</span>Seed</button>
+        </form>
+        <p class="err" id="seed-err" hidden style="text-align:center"></p>`;
+      $("#bench").addEventListener("click", (e) => { const b = e.target.closest("[data-plant]"); if (b) go("plant", b.dataset.plant); });
+      $("#seed-form").addEventListener("submit", addSeed);
+    }
+    const plants = S.plants.slice().sort((a, b) => (a.id === S.me ? -1 : b.id === S.me ? 1 : (a.name || "").localeCompare(b.name || "")));
+    $("#bench").innerHTML = plants.map((p) => {
+      const h = health(p);
+      return `<button type="button" class="plant ${p.id === S.me ? "mine" : ""}" data-plant="${esc(p.id)}" aria-label="${esc(p.name)}'s plant, ${h.label}">
+        ${plantSVG(p)}<span class="nm">${esc(p.name || "?")}</span><span class="st ${h.key}">${h.label}</span>
+      </button>`;
+    }).join("");
+  }
+  async function addSeed(e) {
+    e.preventDefault();
+    const title = $("#seed-title").value.trim(); if (!title) return;
+    if (!S.nodesLoaded) return toast("one moment…");
+    const btn = e.target.querySelector("button"); btn.disabled = true;
+    const now = Date.now();
+    const node = { user: S.me, title, status: "seed", kind: "blog", body: "", createdAt: now, lastActivity: now, sproutedAt: null, doneAt: null };
+    try {
+      const ref = await nodesCol(S.me).add(node);
+      await syncPlant([...S.nodes.filter((n) => n.id !== ref.id), { id: ref.id, ...node }]);
+      $("#seed-title").value = ""; $("#seed-err").hidden = true; toast("seed planted");
+    } catch (err) { const el = $("#seed-err"); el.textContent = friendly(err); el.hidden = false; }
+    btn.disabled = false;
+  }
+
+  function viewPlant(full) {
+    const own = S.plantId === S.me;
+    const p = S.plants.find((x) => x.id === S.plantId);
+    if (full) {
+      app.innerHTML = `
+        <button class="link back" type="button" data-to="garden">← garden</button>
+        <div class="top"><h2 id="p-name"></h2><span class="small" id="p-state"></span></div>
+        <section class="sky" id="sky"></section>
+        ${own ? `<div class="under"><button class="link" type="button" data-to="garden">+ seed</button></div>` : ""}
+        <section class="notes" aria-label="Check-ins">
+          <div id="ci"></div>
+          <form id="ci-form"><input id="ci-msg" class="line-in" maxlength="280" placeholder="${own ? "reply…" : "check in…"}" aria-label="Check-in message" required><button class="box" type="submit">send</button></form>
+        </section>`;
+      app.onclick = (e) => {
+        const to = e.target.closest("[data-to]"); if (to) return go(to.dataset.to);
+        const s = e.target.closest("[data-node]"); if (s) go("node", S.plantId, s.dataset.node);
+      };
+      $("#sky").addEventListener("keydown", (e) => { const s = e.target.closest("[data-node]"); if (s && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); go("node", S.plantId, s.dataset.node); } });
+      $("#ci-form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const msg = $("#ci-msg").value.trim(); if (!msg) return;
+        try { await S.db.collection("checkins").add({ plant: S.plantId, from: S.me, message: msg, createdAt: Date.now() }); $("#ci-msg").value = ""; }
+        catch (err) { toast(friendly(err)); }
+      });
+    }
+    if (!p) { $("#p-name").textContent = S.plantsLoaded ? "this plant is gone" : ""; return; }
+    $("#p-name").textContent = own ? "your plant" : (p.name || "?") + "'s plant";
+    $("#p-state").textContent = health(p).label;
+    $("#sky").innerHTML = !S.nodesLoaded ? "" : S.nodes.length ? skySVG(S.nodes) : `<p class="small" style="text-align:center;padding:60px 0">no seeds yet</p>`;
+    const nameFor = (id) => (id === S.me ? "you" : S.plants.find((x) => x.id === id)?.name || "someone");
+    $("#ci").innerHTML = S.checkins.map((c, i) => `<div class="note"><b>${esc(nameFor(c.from))}:</b><span data-i="${i}"></span></div>`).join("");
+    document.querySelectorAll("#ci [data-i]").forEach((el) => (el.textContent = S.checkins[+el.dataset.i].message));
+  }
+
+  function viewNode(full) {
+    const own = S.plantId === S.me;
+    const n = S.nodes.find((x) => x.id === S.nodeId);
+    if (full) {
+      app.innerHTML = `<button class="link back" type="button" data-to="plant">← constellation</button><article class="sheet" id="sheet"></article>`;
+      app.onclick = async (e) => {
+        if (e.target.closest("[data-to]")) return go("plant", S.plantId);
+        const a = e.target.closest("[data-act]")?.dataset.act; if (!a) return;
+        const now = Date.now(), ref = nodesCol(S.me).doc(S.nodeId);
+        try {
+          if (a === "done" || a === "reopen") {
+            const u = a === "done" ? { status: "done", doneAt: now, lastActivity: now } : { status: "sprout", doneAt: null, lastActivity: now };
+            await ref.update(u); await syncPlant(withNode(S.nodeId, u)); toast(a === "done" ? "marked done" : "reopened");
+          }
+          if (a === "del") { S.confirmDel = true; delArea(); }
+          if (a === "del-yes") { await ref.delete(); await syncPlant(S.nodes.filter((x) => x.id !== S.nodeId)); go("plant", S.me); }
+          if (a === "del-no") { S.confirmDel = false; delArea(); }
+        } catch (err) { toast(friendly(err)); }
+      };
+      S.loadedPost = null;
+    }
+    if (!n) { if (S.nodesLoaded) $("#sheet").innerHTML = `<p class="small">this seed is gone</p>`; return; }
+    const st = n.status || "seed";
+    const sheet = $("#sheet");
+    if (own) {
+      if (S.loadedPost !== n.id || full) {
+        sheet.innerHTML = `
+          <span class="tag" id="kind-tag">${esc(KINDS[n.kind] || KINDS.blog)}</span>
+          <h2>${esc(n.title)}</h2>
+          <div class="meta"><span id="st">${st}</span>
+            <select id="kind" aria-label="Post type">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}" ${k === (n.kind || "blog") ? "selected" : ""}>${v}</option>`).join("")}</select></div>
+          <form id="post-form">
+            <textarea id="body" aria-label="Post" placeholder="${st === "seed" ? "write here to sprout this seed…" : ""}">${esc(n.body || "")}</textarea>
+            <div class="acts">
+              <button class="box" type="submit" id="save">save</button>
+              <span id="state-acts"></span>
+              <span style="margin-left:auto" id="del-area"></span>
+            </div>
+          </form>`;
+        $("#kind").addEventListener("change", (e) => ($("#kind-tag").textContent = KINDS[e.target.value]));
+        $("#post-form").addEventListener("submit", savePost);
+        S.loadedPost = n.id;
+        delArea();
+      }
+      $("#st").textContent = st;
+      $("#state-acts").innerHTML = st === "sprout" ? `<button class="link" type="button" data-act="done">mark done</button>` : st === "done" ? `<button class="link" type="button" data-act="reopen">reopen</button>` : "";
+      return;
+    }
+    sheet.innerHTML = `
+      <span class="tag">${esc(KINDS[n.kind] || KINDS.blog)}</span>
+      <h2>${esc(n.title)}</h2>
+      <div class="meta"><span>${st}</span></div>
+      ${n.body ? `<div class="body">${n.body.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("")}</div>` : `<div class="empty-lines">still a seed</div>`}`;
+  }
+  function delArea() {
+    const el = $("#del-area"); if (!el) return;
+    el.innerHTML = S.confirmDel ? `delete? <button class="link" type="button" data-act="del-yes">yes</button> / <button class="link" type="button" data-act="del-no">no</button>` : `<button class="link small" type="button" data-act="del">delete</button>`;
+  }
+  async function savePost(e) {
+    e.preventDefault();
+    const n = S.nodes.find((x) => x.id === S.nodeId); if (!n) return;
+    const body = $("#body").value.trim(); if (!body) return toast("write something first");
+    const btn = $("#save"); btn.disabled = true;
+    const now = Date.now(), u = { body, kind: $("#kind").value, lastActivity: now };
+    if (n.status === "seed") { u.status = "sprout"; u.sproutedAt = now; }
+    try { await nodesCol(S.me).doc(n.id).update(u); await syncPlant(withNode(n.id, u)); toast(n.status === "seed" ? "sprouted!" : "saved"); }
+    catch (err) { toast(friendly(err)); }
+    btn.disabled = false;
+  }
+
+  // ---------- boot ----------
+  function startDb() {
+    S.db = makeDb(S.token, signOut);
+    S.unsub.gardens = S.db.collection("gardens").onSnapshot((snap) => {
+      S.plants = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => p.owner);
+      S.plantsLoaded = true; refresh();
+    });
+  }
+  function signOut() {
+    try { localStorage.removeItem(SESSION_KEY); } catch {}
+    Object.values(S.unsub).forEach((u) => typeof u === "function" && u());
+    if (S.db) S.db.close();
+    Object.assign(S, { db: null, me: null, token: null, name: null, unsub: {}, plants: [], nodes: [], checkins: [], plantsLoaded: false, nodesLoaded: false, view: "enter" });
+    render(true);
+  }
+  render(true);
+  (async () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+      if (saved && saved.token) { S.me = saved.uid; S.token = saved.token; S.name = saved.name; startDb(); }
+    } catch {}
+    try { S.needsCode = (await (await fetch("/api/config")).json()).needsCode; } catch {}
+    S.ready = true;
+    render(true);
+    setInterval(refresh, 5 * 60000);
+  })();
+})();
+</script>
+</body>
+</html>
