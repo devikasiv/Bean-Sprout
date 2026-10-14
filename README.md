@@ -1,6 +1,6 @@
 # Thesis Garden
 
-A shared accountability garden for thesis readings. Each person's thesis is a plant, each book or article is a seed, and writing a post about it makes it sprout. Plants wilt when the open readings go quiet, so classmates can check in.
+A shared accountability garden for thesis readings. Each person's thesis is a plant, each book or article is a seed, and writing a post about it makes it sprout. Plants wilt when the open readings go quiet, so Loftees can check in on one another.
 
 Check it out here: [Thesis Garden](https://bean-sprout-production.up.railway.app/)
 
